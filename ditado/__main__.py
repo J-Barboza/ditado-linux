@@ -51,10 +51,8 @@ def cmd_test_mic(args):
 
 
 def cmd_test_key(args):
-    from ditado.hotkey import find_keyboards, listen
+    from ditado.hotkey import listen
 
-    for keyboard in find_keyboards():
-        print(f"Escutando: {keyboard.name} ({keyboard.path})")
     print("Aperte e solte a tecla Pause (Ctrl+C para sair).")
     listen(on_press=lambda: print("apertou"), on_release=lambda: print("soltou"))
 

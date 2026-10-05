@@ -62,13 +62,9 @@ class App:
             print("Pronto! Aperte a tecla de atalho para começar e de novo para parar (Ctrl+C para sair).")
         else:
             print("Pronto! Segure a tecla de atalho para falar (Ctrl+C para sair).")
-        try:
-            # listen() fica em loop e chama on_press/on_release nesta mesma thread
-            listen(on_press=self.on_press, on_release=self.on_release, key=self.key)
-        except RuntimeError as error:
-            # Sem acesso ao teclado: ainda dá para usar o "ditado toggle"
-            self._tell(f"{error} Ainda dá para usar o comando: ditado toggle")
-            threading.Event().wait()  # espera para sempre (até o Ctrl+C)
+        # listen() fica em loop e chama on_press/on_release nesta mesma thread.
+        # Mesmo sem teclado, o "ditado toggle" continua funcionando pelo socket.
+        listen(on_press=self.on_press, on_release=self.on_release, key=self.key, warn=self._tell)
 
     # --- Entradas: tecla e "ditado toggle" ---
 

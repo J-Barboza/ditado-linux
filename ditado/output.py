@@ -74,7 +74,8 @@ class Paster:
         self.restore_clipboard = restore_clipboard
         # Teclado virtual criado em /dev/uinput (precisa da regra udev do install.sh).
         # Criamos uma vez só: o GNOME demora um pouco para reconhecer um teclado novo.
-        self.keyboard = evdev.UInput(name="ditado-teclado-virtual")
+        # Ele só tem as teclas de colar; sem a tecla Pause, o hotkey.py não o escuta.
+        self.keyboard = evdev.UInput({ecodes.EV_KEY: keys}, name="ditado-teclado-virtual")
         time.sleep(0.5)
 
     def _press_keys(self, keys):
