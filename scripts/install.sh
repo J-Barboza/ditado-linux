@@ -45,9 +45,15 @@ if [ ! -x "$VENV/bin/python" ]; then
     "$PYTHON" -m venv "$VENV"
 fi
 "$VENV/bin/pip" install --upgrade pip
-# evdev-binary: o mesmo python-evdev (import evdev), mas já compilado.
-# Assim não precisamos do python3.13-devel, que no EPEL exige um RHEL mais novo.
-"$VENV/bin/pip" install evdev-binary
+# Instala o Ditado e as dependências do pyproject.toml. O "-e" (editável) faz o
+# venv usar o código desta pasta: uma mudança no código vale sem reinstalar.
+# Obs.: o evdev vem do pacote evdev-binary (já compilado), assim não precisamos do
+# python3.13-devel, que no EPEL exige um RHEL mais novo.
+"$VENV/bin/pip" install -e "$(dirname "$0")/.."
+
+echo "==> Comando ditado em ~/.local/bin"
+mkdir -p "$HOME/.local/bin"
+ln -sf "$VENV/bin/ditado" "$HOME/.local/bin/ditado"
 
 cat <<EOF
 

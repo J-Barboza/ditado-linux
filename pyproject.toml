@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ditado"
+version = "0.1.0"
+description = "Ditado por voz para Linux (GNOME/Wayland) com faster-whisper"
+requires-python = ">=3.11"
+dependencies = [
+    "evdev-binary",
+    "sounddevice",
+    "numpy",
+    "faster-whisper",
+]
+
+[project.scripts]
+ditado = "ditado.__main__:main"
+
+[tool.setuptools]
+packages = ["ditado"]
