@@ -13,6 +13,7 @@ from evdev import ecodes
 
 # Ctrl+Shift+V cola tanto no terminal quanto no navegador
 PASTE_KEYS = [ecodes.KEY_LEFTCTRL, ecodes.KEY_LEFTSHIFT, ecodes.KEY_V]
+KEY_DELAY = 0.012  # segundos entre uma tecla e outra
 
 
 def copy_to_clipboard(text):
@@ -33,11 +34,16 @@ class Paster:
     def _press_keys(self, keys):
         # Aperta as teclas na ordem e solta na ordem inversa (como uma pessoa faria)
         for key in keys:
-            self.keyboard.write(ecodes.EV_KEY, key, 1)
-            self.keyboard.syn()
+            self._send_key(key, 1)
         for key in reversed(keys):
-            self.keyboard.write(ecodes.EV_KEY, key, 0)
-            self.keyboard.syn()
+            self._send_key(key, 0)
+
+    def _send_key(self, key, value):
+        self.keyboard.write(ecodes.EV_KEY, key, value)
+        self.keyboard.syn()
+        # Pausa curta entre as teclas (o ydotool usa 12 ms). Sem ela, às vezes o
+        # "V" chega antes de o sistema registrar o Ctrl+Shift, e a colagem falha.
+        time.sleep(KEY_DELAY)
 
     def paste(self, text):
         copy_to_clipboard(text)
