@@ -1,4 +1,4 @@
-"""Linha de comando: ditado test-mic | test-key | test-transcribe | test-paste."""
+"""Linha de comando: ditado run | test-mic | test-key | test-transcribe | test-paste."""
 
 import argparse
 import sys
@@ -6,6 +6,12 @@ import time
 
 # Os imports pesados (faster-whisper, sounddevice...) ficam dentro de cada
 # comando, para que um comando não espere carregar o que não usa.
+
+
+def cmd_run(args):
+    from ditado.app import App
+
+    App().run()
 
 
 def cmd_test_mic(args):
@@ -95,6 +101,9 @@ def main():
     parser = argparse.ArgumentParser(prog="ditado", description="Ditado por voz")
     commands = parser.add_subparsers(dest="command", required=True)
 
+    commands.add_parser("run", help="segure Pause, fale e solte: o texto é colado").set_defaults(
+        func=cmd_run
+    )
     commands.add_parser("test-mic", help="grava 3 s e mostra o volume").set_defaults(
         func=cmd_test_mic
     )
