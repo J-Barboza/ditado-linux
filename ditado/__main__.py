@@ -1,4 +1,4 @@
-"""Linha de comando: ditado run | test-mic | test-key | test-transcribe | test-paste."""
+"""Linha de comando: ditado run | toggle | test-mic | test-key | test-transcribe | test-paste."""
 
 import argparse
 import sys
@@ -13,6 +13,13 @@ def cmd_run(args):
     from ditado.config import load_config
 
     App(load_config()).run()
+
+
+def cmd_toggle(args):
+    from ditado import ipc
+
+    print(ipc.send("toggle"))
+    return 0
 
 
 def cmd_test_mic(args):
@@ -106,6 +113,9 @@ def main():
 
     commands.add_parser("run", help="segure Pause, fale e solte: o texto é colado").set_defaults(
         func=cmd_run
+    )
+    commands.add_parser("toggle", help="começa ou para a gravação no app que está rodando").set_defaults(
+        func=cmd_toggle
     )
     commands.add_parser("test-mic", help="grava 3 s e mostra o volume").set_defaults(
         func=cmd_test_mic

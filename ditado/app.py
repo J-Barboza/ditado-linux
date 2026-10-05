@@ -3,6 +3,9 @@
 Máquina de estados:
     PARADO --(apertou)--> GRAVANDO --(soltou)--> TRANSCREVENDO --> COLANDO --> PARADO
 
+No modo "alternar" (e no comando "ditado toggle"), o primeiro aperto começa a
+gravar e o segundo para.
+
 Privacidade: as mensagens mostram só o estado, nunca o texto transcrito.
 """
 
@@ -10,6 +13,7 @@ import threading
 
 from evdev import ecodes
 
+from ditado import ipc
 from ditado.audio import SAMPLE_RATE, Recorder
 from ditado.hotkey import listen
 from ditado.notify import Notifier
@@ -31,6 +35,7 @@ class App:
         if key_name not in ecodes.ecodes:
             raise ValueError(f"Tecla desconhecida em atalho.tecla: {key_name}")
         self.key = ecodes.ecodes[key_name]  # ex.: "KEY_PAUSE" -> 119
+        self.toggle_mode = config["atalho"]["modo"] == "alternar"
 
         print("Carregando o modelo...")
         # Carregado uma vez só, fica na memória
@@ -41,6 +46,9 @@ class App:
         self.recorder = Recorder(device=config["audio"]["dispositivo"] or None)
         self.notifier = Notifier(config["avisos"]["notificacao"], config["avisos"]["bip"])
         self.state = IDLE
+        # A tecla e o "ditado toggle" chegam por threads diferentes. A trava (lock)
+        # garante que só uma delas por vez começa ou para a gravação.
+        self.lock = threading.Lock()
 
     def _tell(self, message):
         """Mostra a mensagem no terminal (ou no journal) e como notificação."""
@@ -48,11 +56,44 @@ class App:
         self.notifier.notify(message)
 
     def run(self):
-        print("Pronto! Segure a tecla de atalho para falar (Ctrl+C para sair).")
-        # listen() fica em loop e chama on_press/on_release nesta mesma thread
-        listen(on_press=self.on_press, on_release=self.on_release, key=self.key)
+        ipc.serve(on_toggle=self.toggle)
+        if self.toggle_mode:
+            print("Pronto! Aperte a tecla de atalho para começar e de novo para parar (Ctrl+C para sair).")
+        else:
+            print("Pronto! Segure a tecla de atalho para falar (Ctrl+C para sair).")
+        try:
+            # listen() fica em loop e chama on_press/on_release nesta mesma thread
+            listen(on_press=self.on_press, on_release=self.on_release, key=self.key)
+        except RuntimeError as error:
+            # Sem acesso ao teclado: ainda dá para usar o "ditado toggle"
+            self._tell(f"{error} Ainda dá para usar o comando: ditado toggle")
+            threading.Event().wait()  # espera para sempre (até o Ctrl+C)
+
+    # --- Entradas: tecla e "ditado toggle" ---
 
     def on_press(self):
+        if self.toggle_mode:
+            self.toggle()
+        else:
+            with self.lock:
+                self._start_recording()
+
+    def on_release(self):
+        if not self.toggle_mode:
+            with self.lock:
+                self._stop_recording()
+
+    def toggle(self):
+        with self.lock:
+            if self.state == IDLE:
+                self._start_recording()
+            elif self.state == RECORDING:
+                self._stop_recording()
+            # TRANSCREVENDO ou COLANDO: ignora
+
+    # --- Etapas (chamadas sempre com a trava pega) ---
+
+    def _start_recording(self):
         if self.state != IDLE:
             return  # ainda transcrevendo o ditado anterior: ignora
         try:
@@ -64,7 +105,7 @@ class App:
         self.notifier.beep(880)
         self._tell("Gravando…")
 
-    def on_release(self):
+    def _stop_recording(self):
         if self.state != RECORDING:
             return
         self.state = TRANSCRIBING
@@ -76,7 +117,7 @@ class App:
             return
         self.notifier.beep(440)
         # A transcrição demora; numa thread separada ela não trava a leitura da tecla.
-        # Enquanto isso o estado fica TRANSCREVENDO, e on_press() ignora a tecla.
+        # Enquanto isso o estado fica TRANSCREVENDO, e novos apertos são ignorados.
         threading.Thread(target=self._transcribe_and_paste, args=(audio,), daemon=True).start()
 
     def _transcribe_and_paste(self, audio):
