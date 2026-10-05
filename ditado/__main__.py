@@ -10,8 +10,9 @@ import time
 
 def cmd_run(args):
     from ditado.app import App
+    from ditado.config import load_config
 
-    App().run()
+    App(load_config()).run()
 
 
 def cmd_test_mic(args):

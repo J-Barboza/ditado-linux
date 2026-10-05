@@ -8,6 +8,8 @@ Privacidade: as mensagens mostram só o estado, nunca o texto transcrito.
 
 import threading
 
+from evdev import ecodes
+
 from ditado.audio import SAMPLE_RATE, Recorder
 from ditado.hotkey import listen
 from ditado.output import Paster
@@ -22,17 +24,24 @@ MIN_SECONDS = 0.3  # gravações menores que isso são toque acidental na tecla
 
 
 class App:
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+        key_name = config["atalho"]["tecla"]
+        if key_name not in ecodes.ecodes:
+            raise ValueError(f"Tecla desconhecida em atalho.tecla: {key_name}")
+        self.key = ecodes.ecodes[key_name]  # ex.: "KEY_PAUSE" -> 119
+
         print("Carregando o modelo...")
-        self.transcriber = Transcriber()  # carregado uma vez só, fica na memória
+        # Carregado uma vez só, fica na memória
+        self.transcriber = Transcriber(config["whisper"]["modelo"], config["whisper"]["idioma"])
         self.paster = Paster()
-        self.recorder = Recorder()
+        self.recorder = Recorder(device=config["audio"]["dispositivo"] or None)
         self.state = IDLE
 
     def run(self):
-        print("Pronto! Segure Pause para falar (Ctrl+C para sair).")
+        print("Pronto! Segure a tecla de atalho para falar (Ctrl+C para sair).")
         # listen() fica em loop e chama on_press/on_release nesta mesma thread
-        listen(on_press=self.on_press, on_release=self.on_release)
+        listen(on_press=self.on_press, on_release=self.on_release, key=self.key)
 
     def on_press(self):
         if self.state != IDLE:
