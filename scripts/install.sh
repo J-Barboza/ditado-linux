@@ -68,7 +68,7 @@ cat <<EOF
 
 Pronto. O ditado já está rodando como serviço:
   systemctl --user status ditado
-  journalctl --user -u ditado -f
+  journalctl --user-unit=ditado -f
 
 Testes da Fase 0:
   1) Tecla Pause (escolha o teclado na lista e aperte Pause; Ctrl+C para sair):
