@@ -12,6 +12,7 @@ from evdev import ecodes
 
 from ditado.audio import SAMPLE_RATE, Recorder
 from ditado.hotkey import listen
+from ditado.notify import Notifier
 from ditado.output import Paster
 from ditado.transcriber import Transcriber
 
@@ -36,7 +37,13 @@ class App:
         self.transcriber = Transcriber(config["whisper"]["modelo"], config["whisper"]["idioma"])
         self.paster = Paster()
         self.recorder = Recorder(device=config["audio"]["dispositivo"] or None)
+        self.notifier = Notifier(config["avisos"]["notificacao"], config["avisos"]["bip"])
         self.state = IDLE
+
+    def _tell(self, message):
+        """Mostra a mensagem no terminal (ou no journal) e como notificação."""
+        print(message)
+        self.notifier.notify(message)
 
     def run(self):
         print("Pronto! Segure a tecla de atalho para falar (Ctrl+C para sair).")
@@ -49,10 +56,11 @@ class App:
         try:
             self.recorder.start()
         except Exception as error:
-            print(f"Erro ao abrir o microfone: {error}")
+            self._tell(f"Erro ao abrir o microfone: {error}")
             return
         self.state = RECORDING
-        print("Gravando…")
+        self.notifier.beep(880)
+        self._tell("Gravando…")
 
     def on_release(self):
         if self.state != RECORDING:
@@ -61,9 +69,10 @@ class App:
         try:
             audio = self.recorder.stop()
         except Exception as error:
-            print(f"Erro ao parar a gravação: {error}")
+            self._tell(f"Erro ao parar a gravação: {error}")
             self.state = IDLE
             return
+        self.notifier.beep(440)
         # A transcrição demora; numa thread separada ela não trava a leitura da tecla.
         # Enquanto isso o estado fica TRANSCREVENDO, e on_press() ignora a tecla.
         threading.Thread(target=self._transcribe_and_paste, args=(audio,), daemon=True).start()
@@ -73,10 +82,10 @@ class App:
             if audio.size < MIN_SECONDS * SAMPLE_RATE:
                 print("Gravação muito curta, ignorada.")
                 return
-            print("Transcrevendo…")
+            self._tell("Transcrevendo…")
             text = self.transcriber.transcribe(audio)
             if not text:
-                print("Nada reconhecido.")
+                self._tell("Nada reconhecido.")
                 return
             self.state = PASTING
             # O espaço no fim evita que dois ditados seguidos fiquem grudados
@@ -84,6 +93,6 @@ class App:
             print("Colado.")
         except Exception as error:
             # Qualquer erro: avisa e volta para PARADO. O app nunca pode travar.
-            print(f"Erro: {error}")
+            self._tell(f"Erro: {error}")
         finally:
             self.state = IDLE
