@@ -31,6 +31,10 @@ DEFAULTS = {
 }
 
 
+class ConfigError(ValueError):
+    """Erro no arquivo de configuração: mostrado ao usuário sem o traceback."""
+
+
 def load_config(path=CONFIG_PATH):
     """Devolve a configuração: os padrões, sobrescritos pelo que houver no arquivo."""
     config = copy.deepcopy(DEFAULTS)  # cópia, para não alterar os padrões
@@ -38,16 +42,19 @@ def load_config(path=CONFIG_PATH):
         return config
 
     with open(path, "rb") as file:
-        user_config = tomllib.load(file)
+        try:
+            user_config = tomllib.load(file)
+        except tomllib.TOMLDecodeError as error:
+            raise ConfigError(f"Erro de sintaxe em {path}: {error}")
 
     for section, values in user_config.items():
         if section not in config:
-            raise ValueError(f"Seção desconhecida em {path}: [{section}]")
+            raise ConfigError(f"Seção desconhecida em {path}: [{section}]")
         for key, value in values.items():
             if key not in config[section]:
-                raise ValueError(f"Opção desconhecida em {path}: {section}.{key}")
+                raise ConfigError(f"Opção desconhecida em {path}: {section}.{key}")
             config[section][key] = value
 
     if config["atalho"]["modo"] not in ("segurar", "alternar"):
-        raise ValueError('atalho.modo precisa ser "segurar" ou "alternar"')
+        raise ConfigError('atalho.modo precisa ser "segurar" ou "alternar"')
     return config

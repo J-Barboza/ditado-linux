@@ -11,6 +11,8 @@ import time
 import evdev
 from evdev import ecodes
 
+from ditado.config import ConfigError
+
 KEY_DELAY = 0.012  # segundos entre uma tecla e outra
 # Depois do Ctrl+V, o programa de destino ainda vai buscar o texto na área de
 # transferência. Esperamos um pouco antes de devolver o conteúdo antigo.
@@ -34,7 +36,7 @@ def parse_keys(combo):
         elif "KEY_" + name.upper() in ecodes.ecodes:
             keys.append(ecodes.ecodes["KEY_" + name.upper()])
         else:
-            raise ValueError(f"Tecla desconhecida em saida.colar_com: {name!r}")
+            raise ConfigError(f"Tecla desconhecida em saida.colar_com: {name!r}")
     return keys
 
 

@@ -15,6 +15,7 @@ from evdev import ecodes
 
 from ditado import ipc
 from ditado.audio import SAMPLE_RATE, Recorder
+from ditado.config import ConfigError
 from ditado.hotkey import listen
 from ditado.notify import Notifier
 from ditado.output import Paster, parse_keys
@@ -33,7 +34,7 @@ class App:
         self.config = config
         key_name = config["atalho"]["tecla"]
         if key_name not in ecodes.ecodes:
-            raise ValueError(f"Tecla desconhecida em atalho.tecla: {key_name}")
+            raise ConfigError(f"Tecla desconhecida em atalho.tecla: {key_name}")
         self.key = ecodes.ecodes[key_name]  # ex.: "KEY_PAUSE" -> 119
         self.toggle_mode = config["atalho"]["modo"] == "alternar"
 

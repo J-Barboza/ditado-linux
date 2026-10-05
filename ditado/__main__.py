@@ -131,8 +131,13 @@ def main():
     )
 
     args = parser.parse_args()
+    from ditado.config import ConfigError
+
     try:
         return args.func(args)
+    except ConfigError as error:
+        print(f"Erro na configuração: {error}", file=sys.stderr)
+        return 1
     except KeyboardInterrupt:
         print()  # Ctrl+C: sai sem mostrar erro
         return 0

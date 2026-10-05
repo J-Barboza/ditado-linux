@@ -1,6 +1,6 @@
 import pytest
 
-from ditado.config import DEFAULTS, load_config
+from ditado.config import DEFAULTS, ConfigError, load_config
 
 
 def test_sem_arquivo_usa_os_padroes(tmp_path):
@@ -29,12 +29,19 @@ def test_nao_altera_os_padroes(tmp_path):
 def test_opcao_desconhecida_da_erro(tmp_path):
     path = tmp_path / "config.toml"
     path.write_text('[whisper]\nmodelos = "base"\n')  # erro de digitação
-    with pytest.raises(ValueError, match="whisper.modelos"):
+    with pytest.raises(ConfigError, match="whisper.modelos"):
         load_config(path)
 
 
 def test_modo_invalido_da_erro(tmp_path):
     path = tmp_path / "config.toml"
     path.write_text('[atalho]\nmodo = "apertar"\n')
-    with pytest.raises(ValueError, match="atalho.modo"):
+    with pytest.raises(ConfigError, match="atalho.modo"):
+        load_config(path)
+
+
+def test_erro_de_sintaxe_vira_config_error(tmp_path):
+    path = tmp_path / "config.toml"
+    path.write_text('[whisper\nmodelo = "base"\n')  # falta o "]"
+    with pytest.raises(ConfigError, match="sintaxe"):
         load_config(path)

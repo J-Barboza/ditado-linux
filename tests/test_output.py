@@ -1,6 +1,7 @@
 import pytest
 from evdev import ecodes
 
+from ditado.config import ConfigError
 from ditado.output import parse_keys
 
 
@@ -13,5 +14,5 @@ def test_ignora_maiusculas_e_espacos():
 
 
 def test_tecla_desconhecida_da_erro():
-    with pytest.raises(ValueError, match="ctlr"):
+    with pytest.raises(ConfigError, match="ctlr"):
         parse_keys("ctlr+v")  # erro de digitação
