@@ -13,7 +13,7 @@ from evdev import ecodes
 from ditado.audio import SAMPLE_RATE, Recorder
 from ditado.hotkey import listen
 from ditado.notify import Notifier
-from ditado.output import Paster
+from ditado.output import Paster, parse_keys
 from ditado.transcriber import Transcriber
 
 IDLE = "PARADO"
@@ -35,7 +35,9 @@ class App:
         print("Carregando o modelo...")
         # Carregado uma vez só, fica na memória
         self.transcriber = Transcriber(config["whisper"]["modelo"], config["whisper"]["idioma"])
-        self.paster = Paster()
+        self.paster = Paster(
+            parse_keys(config["saida"]["colar_com"]), config["saida"]["restaurar_clipboard"]
+        )
         self.recorder = Recorder(device=config["audio"]["dispositivo"] or None)
         self.notifier = Notifier(config["avisos"]["notificacao"], config["avisos"]["bip"])
         self.state = IDLE
@@ -89,7 +91,9 @@ class App:
                 return
             self.state = PASTING
             # O espaço no fim evita que dois ditados seguidos fiquem grudados
-            self.paster.paste(text + " ")
+            if self.config["saida"]["espaco_no_final"]:
+                text += " "
+            self.paster.paste(text)
             print("Colado.")
         except Exception as error:
             # Qualquer erro: avisa e volta para PARADO. O app nunca pode travar.

@@ -87,9 +87,11 @@ def cmd_test_transcribe(args):
 
 
 def cmd_test_paste(args):
-    from ditado.output import Paster
+    from ditado.config import load_config
+    from ditado.output import Paster, parse_keys
 
-    paster = Paster()
+    saida = load_config()["saida"]
+    paster = Paster(parse_keys(saida["colar_com"]), saida["restaurar_clipboard"])
     for seconds in (3, 2, 1):
         print(f"Colando em {seconds}... (clique na janela onde quer colar)")
         time.sleep(1)
