@@ -15,9 +15,10 @@ fi
 
 echo "==> Instalando pacotes do sistema (dnf)"
 # portaudio: biblioteca que o sounddevice usa para gravar
+# wl-clipboard (Wayland) e xclip (X11): copiam o texto para a área de transferência
 # skip_if_unavailable: não deixa um repositório quebrado (ex.: pgdg) parar a instalação
 sudo dnf install -y --setopt=skip_if_unavailable=True \
-    wl-clipboard libnotify portaudio
+    wl-clipboard xclip libnotify portaudio
 
 echo "==> Grupo input (para ler o teclado em /dev/input/event*)"
 if id -nG "$USER" | grep -qw input; then
