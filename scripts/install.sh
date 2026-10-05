@@ -56,9 +56,21 @@ echo "==> Comando ditado em ~/.local/bin"
 mkdir -p "$HOME/.local/bin"
 ln -sf "$VENV/bin/ditado" "$HOME/.local/bin/ditado"
 
+echo "==> Serviço systemd de usuário (inicia o ditado no login)"
+mkdir -p "$HOME/.config/systemd/user"
+cp "$(dirname "$0")/../systemd/ditado.service" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload
+systemctl --user enable ditado
+# restart (e não start): se já estava rodando, passa a usar o código novo
+systemctl --user restart ditado
+
 cat <<EOF
 
-Pronto. Testes da Fase 0:
+Pronto. O ditado já está rodando como serviço:
+  systemctl --user status ditado
+  journalctl --user -u ditado -f
+
+Testes da Fase 0:
   1) Tecla Pause (escolha o teclado na lista e aperte Pause; Ctrl+C para sair):
      $VENV/bin/python -m evdev.evtest
 

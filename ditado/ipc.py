@@ -27,7 +27,10 @@ def serve(on_toggle):
     path = socket_path()
     try:
         _connect().close()
-        raise RuntimeError("O ditado já está rodando em outro terminal (ou no serviço).")
+        raise SystemExit(
+            "O ditado já está rodando em outro terminal ou no serviço "
+            "(systemctl --user status ditado)."
+        )
     except (FileNotFoundError, ConnectionRefusedError):
         path.unlink(missing_ok=True)  # arquivo que sobrou de uma execução anterior
 

@@ -1,0 +1,18 @@
+[Unit]
+Description=Ditado: ditado por voz (segure Pause para falar)
+# Só roda dentro da sessão gráfica: precisa da tela (DISPLAY) para colar e notificar
+PartOf=graphical-session.target
+After=graphical-session.target
+# Se falhar 3 vezes em 1 minuto (ex.: erro na configuração), desiste de reiniciar
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+ExecStart=%h/.local/share/ditado/venv/bin/ditado run
+# Sem isto, o Python guarda as mensagens num buffer e elas demoram a chegar ao journal
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
