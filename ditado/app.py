@@ -15,6 +15,7 @@ from evdev import ecodes
 
 from ditado import ipc
 from ditado.audio import SAMPLE_RATE, Recorder
+from ditado.commands import apply_commands
 from ditado.config import ConfigError
 from ditado.hotkey import listen
 from ditado.notify import Notifier
@@ -127,9 +128,11 @@ class App:
             if not text:
                 self._tell("Nada reconhecido.")
                 return
+            text = apply_commands(text)  # "vírgula" -> ",", "nova linha" -> quebra de linha...
             self.state = PASTING
             # O espaço no fim evita que dois ditados seguidos fiquem grudados
-            if self.config["saida"]["espaco_no_final"]:
+            # (mas não depois de uma quebra de linha: a linha nova começaria com espaço)
+            if self.config["saida"]["espaco_no_final"] and not text.endswith("\n"):
                 text += " "
             self.paster.paste(text)
             print("Colado.")
