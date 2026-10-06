@@ -264,3 +264,9 @@ sudo rm /etc/udev/rules.d/80-ditado-uinput.rules
 
 Os pacotes do sistema (`wl-clipboard`, `xclip`, `libnotify`, `portaudio`) e o
 grupo `input` não são removidos, porque outros programas podem usá-los.
+
+---
+
+## Licença
+
+MIT. Veja o arquivo [LICENSE](LICENSE).
