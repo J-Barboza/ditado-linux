@@ -34,3 +34,10 @@ def test_apply_commands(whisper, esperado):
 
 def test_termina_com_nova_linha():
     assert apply_commands("Tchau, nova linha.") == "Tchau\n"
+
+
+def test_comandos_seguidos_ficam_juntos():
+    assert apply_commands(
+        "Funcionou, ponto de exclamação, ponto de exclamação, ponto de exclamação."
+    ) == "Funcionou!!!"
+    assert apply_commands("Sério ponto de interrogação ponto de exclamação") == "Sério?!"
