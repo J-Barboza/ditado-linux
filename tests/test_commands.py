@@ -41,3 +41,19 @@ def test_comandos_seguidos_ficam_juntos():
         "Funcionou, ponto de exclamação, ponto de exclamação, ponto de exclamação."
     ) == "Funcionou!!!"
     assert apply_commands("Sério ponto de interrogação ponto de exclamação") == "Sério?!"
+
+
+@pytest.mark.parametrize(
+    "whisper, esperado",
+    [
+        ("Fale com arroba João", "Fale com @João"),
+        ("Fale com, arroba, João.", "Fale com @João."),
+        ("Arroba maria, tudo bem?", "@maria, tudo bem?"),
+        ("Gostei hashtag python", "Gostei #python"),
+        ("Gostei. Hashtag, Python.", "Gostei. #Python."),
+        ("Oi vírgula arroba joão", "Oi, @joão"),
+        ("hashtag linux hashtag ditado", "#linux #ditado"),
+    ],
+)
+def test_arroba_e_hashtag(whisper, esperado):
+    assert apply_commands(whisper) == esperado

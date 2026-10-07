@@ -15,6 +15,11 @@ PUNCTUATION_COMMANDS = {
     r"dois pontos": ":",
 }
 NEW_LINE_COMMAND = r"nova linha"
+# Símbolos que grudam na palavra seguinte: "arroba joão" -> "@joão"
+PREFIX_COMMANDS = {
+    r"arroba": "@",
+    r"hashtag": "#",
+}
 
 # Espaços e pontuação que o Whisper põe em volta do comando
 AROUND = r"[\s,.;:!?]*"
@@ -33,22 +38,30 @@ def _pattern(command, before):
 # seria descartada pelo comando seguinte ("? !" viraria só "!").
 _PUNCTUATION_PATTERN = _pattern("|".join(PUNCTUATION_COMMANDS), AROUND)
 _NEW_LINE_PATTERN = _pattern(NEW_LINE_COMMAND, BEFORE_NEW_LINE)
+# Antes de "arroba"/"hashtag" descartamos só espaços e vírgulas (um ponto ali é do texto)
+_PREFIX_PATTERN = _pattern("|".join(PREFIX_COMMANDS), r"[\s,]*")
 # Espaço entre dois símbolos seguidos (ex.: "! ! !" de três comandos)
 _SPACE_BETWEEN_SYMBOLS = re.compile(r"([,.?!:]) (?=[,.?!:])")
 # Uma letra logo depois de ". ", "? ", "! " ou de uma quebra de linha
 _SENTENCE_START = re.compile(r"([.!?] |\n)(\w)")
 
 
-def _symbol_for(match):
-    """Descobre qual comando foi encontrado e devolve o símbolo dele."""
-    spoken = match.group(1)
-    for command, symbol in PUNCTUATION_COMMANDS.items():
+def _find_symbol(commands, spoken):
+    """Descobre qual comando foi falado e devolve o símbolo dele."""
+    for command, symbol in commands.items():
         if re.fullmatch(command, spoken, re.IGNORECASE):
-            return symbol + " "
+            return symbol
 
 
 def apply_commands(text):
-    text = _PUNCTUATION_PATTERN.sub(_symbol_for, text)
+    # "arroba"/"hashtag" primeiro: assim a vírgula de um "vírgula" dito logo antes
+    # ainda não existe e não é descartada junto com a pontuação em volta
+    text = _PREFIX_PATTERN.sub(
+        lambda match: " " + _find_symbol(PREFIX_COMMANDS, match.group(1)), text
+    )
+    text = _PUNCTUATION_PATTERN.sub(
+        lambda match: _find_symbol(PUNCTUATION_COMMANDS, match.group(1)) + " ", text
+    )
     text = _SPACE_BETWEEN_SYMBOLS.sub(r"\1", text)  # "! ! !" -> "!!!"
     text = _NEW_LINE_PATTERN.sub("\n", text)
     # Começo de frase com maiúscula

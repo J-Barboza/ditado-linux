@@ -96,8 +96,14 @@ Fale o comando no meio do ditado:
 | "ponto de exclamação" | `!` |
 | "dois pontos" | `:` |
 | "nova linha" | quebra de linha |
+| "arroba" | `@`, junto da palavra seguinte |
+| "hashtag" | `#`, junto da palavra seguinte |
 
-Exemplo: "olá vírgula tudo bem ponto de interrogação" → `Olá, tudo bem?`
+Exemplos:
+
+- "olá vírgula tudo bem ponto de interrogação" → `Olá, tudo bem?`
+- "fale com arroba joão" → `fale com @joão`
+- "gostei hashtag linux" → `gostei #linux`
 
 - Comandos seguidos ficam juntos: três vezes "ponto de exclamação" → `!!!`.
 - Depois de `.`, `?`, `!` e de uma nova linha, a frase seguinte começa com
@@ -106,6 +112,8 @@ Exemplo: "olá vírgula tudo bem ponto de interrogação" → `Olá, tudo bem?`
   executa o comando que estiver digitado.
 - Os comandos estão sempre ligados. Se você falar "vírgula" querendo a
   palavra, ela vira `,`.
+- "arroba" serve para menções (`@joão`), não para e-mails: "fulano arroba
+  gmail ponto com" não vira um endereço de e-mail.
 
 ---
 
